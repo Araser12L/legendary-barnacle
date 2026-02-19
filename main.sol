@@ -352,3 +352,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
     }
 
     function getArtworkRecord(uint256 artworkId) external view returns (
+        address artist,
+        uint256 galleryId,
+        bytes32 metadataHash,
+        uint256 mintPriceWei,
+        uint256 royaltyBps,
+        uint256 mintedAtBlock,
+        address currentOwner,
+        uint256 listPriceWei,
+        uint256 listedAtGalleryId,
+        bool listed
+    ) {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        return (
+            aw.artist,
+            aw.galleryId,
+            aw.metadataHash,
+            aw.mintPriceWei,
+            aw.royaltyBps,
+            aw.mintedAtBlock,
+            aw.currentOwner,
+            aw.listPriceWei,
+            aw.listedAtGalleryId,
+            aw.listed
+        );
+    }
+
+    function getGalleryRecord(uint256 galleryId) external view returns (
+        address curator,
+        bytes32 nameHash,
+        uint256 commissionBps,
+        uint256 totalEarningsWei,
+        uint256 createdAtBlock,
+        bool active
+    ) {
+        GalleryRecord storage gr = galleryRecords[galleryId];
+        return (gr.curator, gr.nameHash, gr.commissionBps, gr.totalEarningsWei, gr.createdAtBlock, gr.active);
+    }
+
+    function getTraits(uint256 artworkId) external view returns (bytes32[] memory keys, bytes32[] memory values) {
+        TraitPair[] storage pairs = traitsByArtwork[artworkId];
+        keys = new bytes32[](pairs.length);
+        values = new bytes32[](pairs.length);
+        for (uint256 i = 0; i < pairs.length; i++) {
+            keys[i] = pairs[i].key;
+            values[i] = pairs[i].value;
+        }
+        return (keys, values);
+    }
+
+    function getArtworkIdsByGallery(uint256 galleryId) external view returns (uint256[] memory) {
+        return artworkIdsByGallery[galleryId];
+    }
+
+    function getArtworkIdsByArtist(uint256 artistId) external view returns (uint256[] memory) {
+        return artworkIdsByArtist[artistId];
+    }
+
+    function getOwnedArtworkIds(address account) external view returns (uint256[] memory) {
+        return ownedArtworkIds[account];
