@@ -529,3 +529,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
             totalEarnings[i] = gr.totalEarningsWei;
             activeFlags[i] = gr.active;
         }
+        return (curators, nameHashes, commissionBps, totalEarnings, activeFlags);
+    }
+
+    function getArtistProfileBatch(uint256[] calldata artistIds) external view returns (
+        address[] memory artists,
+        bytes32[] memory handleHashes,
+        uint256[] memory totalMints,
+        uint256[] memory totalEarnings,
+        bool[] memory activeFlags
+    ) {
+        uint256 n = artistIds.length;
+        artists = new address[](n);
+        handleHashes = new bytes32[](n);
+        totalMints = new uint256[](n);
+        totalEarnings = new uint256[](n);
+        activeFlags = new bool[](n);
+        for (uint256 i = 0; i < n; i++) {
+            ArtistProfile storage ap = artistProfiles[artistIds[i]];
+            artists[i] = ap.artist;
+            handleHashes[i] = ap.handleHash;
+            totalMints[i] = ap.totalMints;
+            totalEarnings[i] = ap.totalEarningsWei;
+            activeFlags[i] = ap.active;
+        }
+        return (artists, handleHashes, totalMints, totalEarnings, activeFlags);
+    }
+
+    function listPriceForArtwork(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].listPriceWei;
+    }
+
+    function currentOwnerOf(uint256 artworkId) external view returns (address) {
+        return artworkRecords[artworkId].currentOwner;
+    }
+
+    function isListed(uint256 artworkId) external view returns (bool) {
+        return artworkRecords[artworkId].listed;
+    }
+
+    function traitCount(uint256 artworkId) external view returns (uint256) {
+        return traitsByArtwork[artworkId].length;
+    }
+
+    function galleryArtworkCount(uint256 galleryId) external view returns (uint256) {
+        return artworkIdsByGallery[galleryId].length;
+    }
+
+    function artistArtworkCount(uint256 artistId) external view returns (uint256) {
+        return artworkIdsByArtist[artistId].length;
+    }
+
+    function totalArtworksMinted() external view returns (uint256) {
+        return artworkCounter;
+    }
+
+    function totalGalleriesCreated() external view returns (uint256) {
+        return galleryCounter;
+    }
+
