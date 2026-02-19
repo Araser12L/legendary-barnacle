@@ -411,3 +411,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
 
     function getOwnedArtworkIds(address account) external view returns (uint256[] memory) {
         return ownedArtworkIds[account];
+    }
+
+    function getPendingArtistProceeds(address artist) external view returns (uint256) {
+        return pendingArtistProceeds[artist];
+    }
+
+    function getPendingGalleryProceeds(uint256 galleryId) external view returns (uint256) {
+        return pendingGalleryProceeds[galleryId];
+    }
+
+    function getArtistId(address account) external view returns (uint256) {
+        return artistIdByAddress[account];
+    }
+
+    function isArtistRegistered(address account) external view returns (bool) {
+        uint256 aid = artistIdByAddress[account];
+        return aid != 0 && artistProfiles[aid].active;
+    }
+
+    function getAllArtistIds() external view returns (uint256[] memory) {
+        return _allArtistIds;
+    }
+
+    function getAllGalleryIds() external view returns (uint256[] memory) {
+        return _allGalleryIds;
+    }
+
+    function getAllArtworkIds() external view returns (uint256[] memory) {
+        return _allArtworkIds;
+    }
+
+    function getConfigSnapshot() external view returns (
+        address platformTreasury_,
+        address genesisCurator_,
+        uint256 deployedAtBlock_,
+        uint256 artistCounter_,
+        uint256 artworkCounter_,
+        uint256 galleryCounter_,
+        bool platformPaused_
+    ) {
+        return (
+            platformTreasury,
+            genesisCurator,
+            deployedAtBlock,
+            artistCounter,
+            artworkCounter,
+            galleryCounter,
+            platformPaused
+        );
+    }
+
+    function getConstantsSnapshot() external pure returns (
+        uint256 bpsDenom,
+        uint256 maxCommissionBps,
+        uint256 maxRoyaltyBps,
+        uint256 maxTraitsPerArtwork,
+        uint256 maxGalleries,
+        uint256 maxArtworks
+    ) {
