@@ -588,3 +588,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         return galleryCounter;
     }
 
+    function totalArtistsRegistered() external view returns (uint256) {
+        return artistCounter;
+    }
+
+    function getListedArtworkIdsInGallery(uint256 galleryId) external view returns (uint256[] memory) {
+        uint256[] storage allIds = artworkIdsByGallery[galleryId];
+        uint256 count = 0;
+        for (uint256 i = 0; i < allIds.length; i++) {
+            if (artworkRecords[allIds[i]].listed && artworkRecords[allIds[i]].listedAtGalleryId == galleryId) count++;
+        }
+        uint256[] memory out = new uint256[](count);
+        uint256 j = 0;
+        for (uint256 i = 0; i < allIds.length; i++) {
+            if (artworkRecords[allIds[i]].listed && artworkRecords[allIds[i]].listedAtGalleryId == galleryId) {
+                out[j] = allIds[i];
+                j++;
+            }
+        }
+        return out;
+    }
+
+    function getTraitAt(uint256 artworkId, uint256 index) external view returns (bytes32 key, bytes32 value) {
+        TraitPair[] storage pairs = traitsByArtwork[artworkId];
+        if (index >= pairs.length) return (bytes32(0), bytes32(0));
+        return (pairs[index].key, pairs[index].value);
+    }
+
+    function computeRoyalty(uint256 priceWei, uint256 royaltyBps) external pure returns (uint256) {
+        return (priceWei * royaltyBps) / BPS_DENOM;
+    }
+
+    function computeGalleryCommission(uint256 priceWei, uint256 commissionBps) external pure returns (uint256) {
+        return (priceWei * commissionBps) / BPS_DENOM;
+    }
+
+    function metadataHashOf(uint256 artworkId) external view returns (bytes32) {
+        return artworkRecords[artworkId].metadataHash;
+    }
+
+    function artistOf(uint256 artworkId) external view returns (address) {
+        return artworkRecords[artworkId].artist;
+    }
+
+    function galleryOf(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].galleryId;
+    }
+
+    function royaltyBpsOf(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].royaltyBps;
+    }
+
+    function mintedAtBlock(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].mintedAtBlock;
+    }
+
+    function curatorOf(uint256 galleryId) external view returns (address) {
+        return galleryRecords[galleryId].curator;
+    }
+
