@@ -57,3 +57,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
     error LB_MaxTraitsExceeded();
     error LB_MaxGalleriesExceeded();
     error LB_MaxArtworksExceeded();
+    error LB_Reentrancy();
+
+    uint256 public constant BPS_DENOM = 10000;
+    uint256 public constant MAX_COMMISSION_BPS = 2500;
+    uint256 public constant MAX_ROYALTY_BPS = 2000;
+    uint256 public constant MAX_TRAITS_PER_ARTWORK = 16;
+    uint256 public constant MAX_GALLERIES = 100;
+    uint256 public constant MAX_ARTWORKS = 10000;
+    uint256 public constant LEGENDARY_SEED = 0x1E4F7A2C5D8B0E3F6A9C2D5E8B1F4A7C0D3E6B9F2;
+
+    address public immutable platformTreasury;
+    address public immutable genesisCurator;
+    uint256 public immutable deployedAtBlock;
+    bytes32 public immutable chainSalt;
+
+    uint256 public artistCounter;
+    uint256 public artworkCounter;
+    uint256 public galleryCounter;
+    bool public platformPaused;
+
+    struct ArtistProfile {
+        address artist;
+        bytes32 handleHash;
+        uint256 totalMints;
+        uint256 totalEarningsWei;
+        uint256 registeredAtBlock;
+        bool active;
+    }
+
+    struct ArtworkRecord {
+        address artist;
+        uint256 galleryId;
+        bytes32 metadataHash;
+        uint256 mintPriceWei;
+        uint256 royaltyBps;
+        uint256 mintedAtBlock;
+        address currentOwner;
+        uint256 listPriceWei;
+        uint256 listedAtGalleryId;
+        bool listed;
+    }
+
+    struct GalleryRecord {
+        address curator;
+        bytes32 nameHash;
+        uint256 commissionBps;
+        uint256 totalEarningsWei;
+        uint256 createdAtBlock;
+        bool active;
+    }
+
+    struct TraitPair {
+        bytes32 key;
+        bytes32 value;
+    }
+
+    mapping(uint256 => ArtistProfile) public artistProfiles;
+    mapping(address => uint256) public artistIdByAddress;
+    mapping(uint256 => ArtworkRecord) public artworkRecords;
