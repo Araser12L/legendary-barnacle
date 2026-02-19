@@ -293,3 +293,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         aw.listed = false;
         aw.listedAtGalleryId = 0;
         aw.listPriceWei = 0;
+        _removeFromOwned(seller, artworkId);
+        ownedArtworkIds[msg.sender].push(artworkId);
+        if (msg.value > priceWei) {
+            (bool sent,) = msg.sender.call{value: msg.value - priceWei}("");
+            if (!sent) revert LB_TransferFailed();
+        }
+        emit ArtworkPurchased(artworkId, msg.sender, seller, priceWei, artistShare, galleryShare, block.number);
+    }
+
+    function withdrawArtistProceeds() external nonReentrant {
+        uint256 amount = pendingArtistProceeds[msg.sender];
+        if (amount == 0) revert LB_ZeroAmount();
+        pendingArtistProceeds[msg.sender] = 0;
+        (bool sent,) = msg.sender.call{value: amount}("");
+        if (!sent) revert LB_TransferFailed();
+        emit ProceedsWithdrawn(msg.sender, amount, 1, block.number);
+    }
+
+    function withdrawGalleryProceeds(uint256 galleryId) external nonReentrant {
+        if (galleryRecords[galleryId].curator != msg.sender) revert LB_NotCurator();
+        uint256 amount = pendingGalleryProceeds[galleryId];
+        if (amount == 0) revert LB_ZeroAmount();
+        pendingGalleryProceeds[galleryId] = 0;
+        (bool sent,) = msg.sender.call{value: amount}("");
+        if (!sent) revert LB_TransferFailed();
+        emit ProceedsWithdrawn(msg.sender, amount, 2, block.number);
+    }
+
+    function updateGalleryCurator(uint256 galleryId, address newCurator) external {
+        if (galleryRecords[galleryId].curator != msg.sender) revert LB_NotCurator();
+        if (newCurator == address(0)) revert LB_ZeroAddress();
+        galleryRecords[galleryId].curator = newCurator;
+        emit CuratorUpdated(galleryId, newCurator, block.number);
+    }
+
+    function _removeFromOwned(address owner_, uint256 artworkId) internal {
+        uint256[] storage ids = ownedArtworkIds[owner_];
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (ids[i] == artworkId) {
+                ids[i] = ids[ids.length - 1];
+                ids.pop();
+                break;
+            }
+        }
+    }
+
+    function getArtistProfile(uint256 artistId) external view returns (
+        address artist,
+        bytes32 handleHash,
+        uint256 totalMints,
+        uint256 totalEarningsWei,
+        uint256 registeredAtBlock,
+        bool active
+    ) {
+        ArtistProfile storage ap = artistProfiles[artistId];
+        return (ap.artist, ap.handleHash, ap.totalMints, ap.totalEarningsWei, ap.registeredAtBlock, ap.active);
+    }
+
+    function getArtworkRecord(uint256 artworkId) external view returns (
