@@ -116,3 +116,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
     mapping(uint256 => ArtistProfile) public artistProfiles;
     mapping(address => uint256) public artistIdByAddress;
     mapping(uint256 => ArtworkRecord) public artworkRecords;
+    mapping(uint256 => GalleryRecord) public galleryRecords;
+    mapping(uint256 => TraitPair[]) public traitsByArtwork;
+    mapping(uint256 => uint256[]) public artworkIdsByGallery;
+    mapping(uint256 => uint256[]) public artworkIdsByArtist;
+    mapping(address => uint256) public pendingArtistProceeds;
+    mapping(uint256 => mapping(uint256 => uint256)) public pendingGalleryProceedsByArtwork;
+    mapping(uint256 => uint256) public pendingGalleryProceeds;
+    mapping(address => uint256[]) public ownedArtworkIds;
+
+    uint256[] private _allArtistIds;
+    uint256[] private _allGalleryIds;
+    uint256[] private _allArtworkIds;
+
+    modifier whenNotPaused() {
+        if (platformPaused) revert LB_PlatformPaused();
+        _;
+    }
+
+    constructor() {
+        platformTreasury = address(0xF1a3C5e7B9d2F4a6C8e0B2d4F6a8C0e2A4c6E8f1);
+        genesisCurator = address(0xB4d6F8a0C2e4A6c8E0b2D4f6A8c0E2a4C6e8B0);
+        deployedAtBlock = block.number;
+        chainSalt = keccak256(abi.encodePacked("LegendaryBarnacle_", block.chainid, block.timestamp, address(this)));
+    }
+
+    function setPlatformPaused(bool paused) external onlyOwner {
+        platformPaused = paused;
+        emit PlatformPauseToggled(paused);
+    }
+
+    function registerArtist(bytes32 handleHash) external whenNotPaused nonReentrant returns (uint256 artistId) {
+        if (msg.sender == address(0)) revert LB_ZeroAddress();
+        if (artistIdByAddress[msg.sender] != 0) revert LB_ArtistAlreadyRegistered();
+        if (artistCounter >= MAX_ARTWORKS) revert LB_MaxArtworksExceeded();
+
+        artistCounter++;
+        artistId = artistCounter;
+        artistIdByAddress[msg.sender] = artistId;
+        artistProfiles[artistId] = ArtistProfile({
+            artist: msg.sender,
+            handleHash: handleHash,
+            totalMints: 0,
+            totalEarningsWei: 0,
+            registeredAtBlock: block.number,
+            active: true
+        });
+        _allArtistIds.push(artistId);
+        emit ArtistRegistered(msg.sender, handleHash, artistId, block.number);
+        return artistId;
+    }
+
+    function createGallery(bytes32 nameHash, uint256 commissionBps) external whenNotPaused nonReentrant returns (uint256 galleryId) {
+        if (msg.sender == address(0)) revert LB_ZeroAddress();
+        if (commissionBps > MAX_COMMISSION_BPS) revert LB_InvalidCommissionBps();
+        if (galleryCounter >= MAX_GALLERIES) revert LB_MaxGalleriesExceeded();
+
+        galleryCounter++;
+        galleryId = galleryCounter;
+        galleryRecords[galleryId] = GalleryRecord({
