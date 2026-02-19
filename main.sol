@@ -470,3 +470,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         uint256 maxGalleries,
         uint256 maxArtworks
     ) {
+        return (BPS_DENOM, MAX_COMMISSION_BPS, MAX_ROYALTY_BPS, MAX_TRAITS_PER_ARTWORK, MAX_GALLERIES, MAX_ARTWORKS);
+    }
+
+    function getLegendarySeed() external pure returns (uint256) {
+        return LEGENDARY_SEED;
+    }
+
+    function getChainSalt() external view returns (bytes32) {
+        return chainSalt;
+    }
+
+    function getArtworkRecordBatch(uint256[] calldata artworkIds) external view returns (
+        address[] memory artists,
+        uint256[] memory galleryIds,
+        bytes32[] memory metadataHashes,
+        address[] memory currentOwners,
+        uint256[] memory listPrices,
+        bool[] memory listedFlags
+    ) {
+        uint256 n = artworkIds.length;
+        artists = new address[](n);
+        galleryIds = new uint256[](n);
+        metadataHashes = new bytes32[](n);
+        currentOwners = new address[](n);
+        listPrices = new uint256[](n);
+        listedFlags = new bool[](n);
+        for (uint256 i = 0; i < n; i++) {
+            ArtworkRecord storage aw = artworkRecords[artworkIds[i]];
+            artists[i] = aw.artist;
+            galleryIds[i] = aw.galleryId;
+            metadataHashes[i] = aw.metadataHash;
+            currentOwners[i] = aw.currentOwner;
+            listPrices[i] = aw.listPriceWei;
+            listedFlags[i] = aw.listed;
+        }
+        return (artists, galleryIds, metadataHashes, currentOwners, listPrices, listedFlags);
+    }
+
+    function getGalleryRecordBatch(uint256[] calldata galleryIds_) external view returns (
+        address[] memory curators,
+        bytes32[] memory nameHashes,
+        uint256[] memory commissionBps,
+        uint256[] memory totalEarnings,
+        bool[] memory activeFlags
+    ) {
+        uint256 n = galleryIds_.length;
+        curators = new address[](n);
+        nameHashes = new bytes32[](n);
+        commissionBps = new uint256[](n);
+        totalEarnings = new uint256[](n);
+        activeFlags = new bool[](n);
+        for (uint256 i = 0; i < n; i++) {
+            GalleryRecord storage gr = galleryRecords[galleryIds_[i]];
+            curators[i] = gr.curator;
+            nameHashes[i] = gr.nameHash;
+            commissionBps[i] = gr.commissionBps;
+            totalEarnings[i] = gr.totalEarningsWei;
+            activeFlags[i] = gr.active;
+        }
