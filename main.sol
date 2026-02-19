@@ -234,3 +234,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         }
 
         if (mintPriceWei > 0) {
+            pendingArtistProceeds[msg.sender] += mintPriceWei;
+        }
+        if (galleryId != 0 && galleryRecords[galleryId].commissionBps > 0 && mintPriceWei > 0) {
+            uint256 galleryCut = (mintPriceWei * galleryRecords[galleryId].commissionBps) / BPS_DENOM;
+            pendingGalleryProceeds[galleryId] += galleryCut;
+            pendingArtistProceeds[msg.sender] -= galleryCut;
+        }
+        emit ArtworkMinted(artworkId, msg.sender, galleryId, metadataHash, mintPriceWei, block.number);
+        return artworkId;
+    }
+
+    function listInGallery(uint256 artworkId, uint256 galleryId, uint256 listPriceWei) external whenNotPaused nonReentrant {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        if (aw.currentOwner != msg.sender) revert LB_NotOwner();
+        if (aw.listed) revert LB_AlreadyListed();
+        if (galleryId == 0 || galleryId > galleryCounter || !galleryRecords[galleryId].active) revert LB_GalleryNotFound();
+        if (galleryRecords[galleryId].curator != msg.sender) {
+            if (aw.artist != msg.sender) revert LB_NotCurator();
+        }
+        aw.listedAtGalleryId = galleryId;
+        aw.listPriceWei = listPriceWei;
+        aw.listed = true;
+        emit ArtworkListedInGallery(artworkId, galleryId, listPriceWei, block.number);
+    }
+
+    function delist(uint256 artworkId) external whenNotPaused nonReentrant {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        if (aw.currentOwner != msg.sender) revert LB_NotOwner();
+        if (!aw.listed) revert LB_NotListed();
+        uint256 gid = aw.listedAtGalleryId;
+        aw.listed = false;
+        aw.listedAtGalleryId = 0;
+        aw.listPriceWei = 0;
+        emit ArtworkDelisted(artworkId, gid, block.number);
+    }
+
+    function purchaseArtwork(uint256 artworkId) external payable whenNotPaused nonReentrant {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        if (!aw.listed) revert LB_NotListed();
+        if (msg.value < aw.listPriceWei) revert LB_InsufficientPayment();
+        address seller = aw.currentOwner;
+        uint256 priceWei = aw.listPriceWei;
+        uint256 galleryId = aw.listedAtGalleryId;
+        uint256 royaltyWei = (priceWei * aw.royaltyBps) / BPS_DENOM;
+        uint256 galleryShare = 0;
+        if (galleryId != 0 && galleryRecords[galleryId].commissionBps > 0) {
+            galleryShare = (priceWei * galleryRecords[galleryId].commissionBps) / BPS_DENOM;
+            pendingGalleryProceeds[galleryId] += galleryShare;
+            galleryRecords[galleryId].totalEarningsWei += galleryShare;
+        }
+        uint256 artistShare = royaltyWei;
+        pendingArtistProceeds[aw.artist] += artistShare;
+        uint256 toSeller = priceWei - royaltyWei - galleryShare;
+        pendingArtistProceeds[seller] += toSeller;
+
+        aw.currentOwner = msg.sender;
+        aw.listed = false;
+        aw.listedAtGalleryId = 0;
+        aw.listPriceWei = 0;
