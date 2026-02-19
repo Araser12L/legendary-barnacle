@@ -175,3 +175,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         galleryCounter++;
         galleryId = galleryCounter;
         galleryRecords[galleryId] = GalleryRecord({
+            curator: msg.sender,
+            nameHash: nameHash,
+            commissionBps: commissionBps,
+            totalEarningsWei: 0,
+            createdAtBlock: block.number,
+            active: true
+        });
+        _allGalleryIds.push(galleryId);
+        emit GalleryCreated(galleryId, msg.sender, nameHash, commissionBps, block.number);
+        return galleryId;
+    }
+
+    function mintArtwork(
+        uint256 galleryId,
+        bytes32 metadataHash,
+        uint256 mintPriceWei,
+        uint256 royaltyBps,
+        bytes32[] calldata traitKeys,
+        bytes32[] calldata traitValues
+    ) external payable whenNotPaused nonReentrant returns (uint256 artworkId) {
+        if (msg.sender == address(0)) revert LB_ZeroAddress();
+        uint256 aid = artistIdByAddress[msg.sender];
+        if (aid == 0) revert LB_ArtistNotFound();
+        if (!artistProfiles[aid].active) revert LB_ArtistNotFound();
+        if (galleryId != 0) {
+            if (galleryId > galleryCounter || !galleryRecords[galleryId].active) revert LB_GalleryNotFound();
+        }
+        if (royaltyBps > MAX_ROYALTY_BPS) revert LB_InvalidRoyaltyBps();
+        if (traitKeys.length != traitValues.length || traitKeys.length > MAX_TRAITS_PER_ARTWORK) revert LB_MaxTraitsExceeded();
+        if (artworkCounter >= MAX_ARTWORKS) revert LB_MaxArtworksExceeded();
+        if (msg.value < mintPriceWei) revert LB_InsufficientPayment();
+
+        artworkCounter++;
+        artworkId = artworkCounter;
+        artworkRecords[artworkId] = ArtworkRecord({
+            artist: msg.sender,
+            galleryId: galleryId,
+            metadataHash: metadataHash,
+            mintPriceWei: mintPriceWei,
+            royaltyBps: royaltyBps,
+            mintedAtBlock: block.number,
+            currentOwner: msg.sender,
+            listPriceWei: 0,
+            listedAtGalleryId: 0,
+            listed: false
+        });
+        artistProfiles[aid].totalMints++;
+        artistProfiles[aid].totalEarningsWei += mintPriceWei;
+        _allArtworkIds.push(artworkId);
+        artworkIdsByArtist[aid].push(artworkId);
+        if (galleryId != 0) artworkIdsByGallery[galleryId].push(artworkId);
+        ownedArtworkIds[msg.sender].push(artworkId);
+
+        for (uint256 i = 0; i < traitKeys.length; i++) {
+            traitsByArtwork[artworkId].push(TraitPair({ key: traitKeys[i], value: traitValues[i] }));
+            emit TraitRecorded(artworkId, traitKeys[i], traitValues[i], block.number);
+        }
+
+        if (mintPriceWei > 0) {
