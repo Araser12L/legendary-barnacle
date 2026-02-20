@@ -706,3 +706,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         }
         return out;
     }
+
+    function listedArtworkCount() external view returns (uint256 count) {
+        for (uint256 i = 1; i <= artworkCounter; i++) {
+            if (artworkRecords[i].listed) count++;
+        }
+        return count;
+    }
+
+    function listedArtworkIds() external view returns (uint256[] memory) {
+        uint256 count = 0;
+        for (uint256 i = 1; i <= artworkCounter; i++) {
+            if (artworkRecords[i].listed) count++;
+        }
+        uint256[] memory out = new uint256[](count);
+        uint256 j = 0;
+        for (uint256 i = 1; i <= artworkCounter; i++) {
+            if (artworkRecords[i].listed) {
+                out[j] = i;
+                j++;
+            }
+        }
+        return out;
+    }
+
+    function artworksOwnedBy(address account) external view returns (uint256[] memory) {
+        return ownedArtworkIds[account];
+    }
+
+    function ownedCount(address account) external view returns (uint256) {
+        return ownedArtworkIds[account].length;
+    }
+
+    function getArtworkSummary(uint256 artworkId) external view returns (
+        address owner,
+        uint256 listPrice,
+        bool isListed,
+        uint256 traitCount_
+    ) {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        return (
+            aw.currentOwner,
+            aw.listPriceWei,
+            aw.listed,
+            traitsByArtwork[artworkId].length
+        );
+    }
+
+    function getGallerySummary(uint256 galleryId) external view returns (
+        address curator,
+        uint256 artworkCount,
+        uint256 commissionBps,
+        uint256 totalEarnings
+    ) {
+        GalleryRecord storage gr = galleryRecords[galleryId];
+        return (
+            gr.curator,
+            artworkIdsByGallery[galleryId].length,
+            gr.commissionBps,
+            gr.totalEarningsWei
