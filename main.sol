@@ -942,3 +942,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         for (uint256 i = 0; i < artistIds.length; i++) hashes[i] = artistProfiles[artistIds[i]].handleHash;
         return hashes;
     }
+
+    function getArtistMintCounts(uint256[] calldata artistIds) external view returns (uint256[] memory counts) {
+        counts = new uint256[](artistIds.length);
+        for (uint256 i = 0; i < artistIds.length; i++) counts[i] = artistProfiles[artistIds[i]].totalMints;
+        return counts;
+    }
+
+    function getArtistEarnings(uint256[] calldata artistIds) external view returns (uint256[] memory earnings) {
+        earnings = new uint256[](artistIds.length);
+        for (uint256 i = 0; i < artistIds.length; i++) earnings[i] = artistProfiles[artistIds[i]].totalEarningsWei;
+        return earnings;
+    }
+
+    function getGalleryEarnings(uint256[] calldata galleryIds_) external view returns (uint256[] memory earnings) {
+        earnings = new uint256[](galleryIds_.length);
+        for (uint256 i = 0; i < galleryIds_.length; i++) earnings[i] = galleryRecords[galleryIds_[i]].totalEarningsWei;
+        return earnings;
+    }
+
+    function getTraitCounts(uint256[] calldata artworkIds) external view returns (uint256[] memory counts) {
+        counts = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) counts[i] = traitsByArtwork[artworkIds[i]].length;
+        return counts;
+    }
+
+    function estimateArtistProceedsAfterCommission(uint256 salePriceWei, uint256 royaltyBps, uint256 galleryCommissionBps) external pure returns (
+        uint256 artistRoyalty,
+        uint256 galleryCut,
+        uint256 toSeller
+    ) {
+        artistRoyalty = (salePriceWei * royaltyBps) / BPS_DENOM;
+        galleryCut = (salePriceWei * galleryCommissionBps) / BPS_DENOM;
+        toSeller = salePriceWei - artistRoyalty - galleryCut;
+        return (artistRoyalty, galleryCut, toSeller);
+    }
+
+    function estimateMintProceeds(uint256 mintPriceWei, uint256 galleryCommissionBps) external pure returns (
+        uint256 toArtist,
+        uint256 toGallery
+    ) {
+        toGallery = (mintPriceWei * galleryCommissionBps) / BPS_DENOM;
+        toArtist = mintPriceWei - toGallery;
+        return (toArtist, toGallery);
+    }
+
+    function getPlatformTreasury() external view returns (address) {
+        return platformTreasury;
+    }
+
+    function getGenesisCurator() external view returns (address) {
+        return genesisCurator;
+    }
+
+    function getDeployedAtBlock() external view returns (uint256) {
+        return deployedAtBlock;
+    }
+
+    function getChainSaltBytes() external view returns (bytes32) {
+        return chainSalt;
