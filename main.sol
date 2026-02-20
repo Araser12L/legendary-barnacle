@@ -1001,3 +1001,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
 
     function getChainSaltBytes() external view returns (bytes32) {
         return chainSalt;
+    }
+
+    function getArtistCounter() external view returns (uint256) {
+        return artistCounter;
+    }
+
+    function getArtworkCounter() external view returns (uint256) {
+        return artworkCounter;
+    }
+
+    function getGalleryCounter() external view returns (uint256) {
+        return galleryCounter;
+    }
+
+    function getLegacySeed() external pure returns (uint256) {
+        return LEGENDARY_SEED;
+    }
+
+    function artworkArtistId(uint256 artworkId) external view returns (uint256) {
+        return artistIdByAddress[artworkRecords[artworkId].artist];
+    }
+
+    function galleryIsActive(uint256 galleryId) external view returns (bool) {
+        return galleryId != 0 && galleryId <= galleryCounter && galleryRecords[galleryId].active;
+    }
+
+    function artistIsActive(uint256 artistId) external view returns (bool) {
+        return artistId != 0 && artistId <= artistCounter && artistProfiles[artistId].active;
+    }
+
+    function canListInGallery(uint256 artworkId, uint256 galleryId, address account) external view returns (bool) {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        if (aw.currentOwner != account) return false;
+        if (aw.listed) return false;
+        if (galleryId == 0 || galleryId > galleryCounter || !galleryRecords[galleryId].active) return false;
+        if (galleryRecords[galleryId].curator == account) return true;
+        if (aw.artist == account) return true;
+        return false;
+    }
+
+    function canDelist(uint256 artworkId, address account) external view returns (bool) {
+        return artworkRecords[artworkId].currentOwner == account && artworkRecords[artworkId].listed;
+    }
+
+    function canPurchase(uint256 artworkId, uint256 valueSent) external view returns (bool) {
+        ArtworkRecord storage aw = artworkRecords[artworkId];
+        return aw.listed && valueSent >= aw.listPriceWei;
+    }
+
+    function minPaymentToPurchase(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].listPriceWei;
+    }
+
+    function artworkGalleryId(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].galleryId;
+    }
+
+    function artworkListedAtGallery(uint256 artworkId) external view returns (uint256) {
+        return artworkRecords[artworkId].listedAtGalleryId;
