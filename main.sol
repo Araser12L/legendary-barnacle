@@ -883,3 +883,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
 
     function getMetadataHashes(uint256[] calldata artworkIds) external view returns (bytes32[] memory hashes) {
         hashes = new bytes32[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) {
+            hashes[i] = artworkRecords[artworkIds[i]].metadataHash;
+        }
+        return hashes;
+    }
+
+    function getRoyaltyBpsBatch(uint256[] calldata artworkIds) external view returns (uint256[] memory bps) {
+        bps = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) bps[i] = artworkRecords[artworkIds[i]].royaltyBps;
+        return bps;
+    }
+
+    function getMintPricesBatch(uint256[] calldata artworkIds) external view returns (uint256[] memory prices) {
+        prices = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) prices[i] = artworkRecords[artworkIds[i]].mintPriceWei;
+        return prices;
+    }
+
+    function getMintedAtBlocks(uint256[] calldata artworkIds) external view returns (uint256[] memory blocks) {
+        blocks = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) blocks[i] = artworkRecords[artworkIds[i]].mintedAtBlock;
+        return blocks;
+    }
+
+    function isListedBatch(uint256[] calldata artworkIds) external view returns (bool[] memory listed) {
+        listed = new bool[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) listed[i] = artworkRecords[artworkIds[i]].listed;
+        return listed;
+    }
+
+    function listedAtGalleryBatch(uint256[] calldata artworkIds) external view returns (uint256[] memory galleryIds) {
+        galleryIds = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) galleryIds[i] = artworkRecords[artworkIds[i]].listedAtGalleryId;
+        return galleryIds;
+    }
+
+    function getCurators(uint256[] calldata galleryIds_) external view returns (address[] memory curators) {
+        curators = new address[](galleryIds_.length);
+        for (uint256 i = 0; i < galleryIds_.length; i++) curators[i] = galleryRecords[galleryIds_[i]].curator;
+        return curators;
+    }
+
+    function getCommissionBpsBatch(uint256[] calldata galleryIds_) external view returns (uint256[] memory bps) {
+        bps = new uint256[](galleryIds_.length);
+        for (uint256 i = 0; i < galleryIds_.length; i++) bps[i] = galleryRecords[galleryIds_[i]].commissionBps;
+        return bps;
+    }
+
+    function getArtistAddresses(uint256[] calldata artistIds) external view returns (address[] memory addresses) {
+        addresses = new address[](artistIds.length);
+        for (uint256 i = 0; i < artistIds.length; i++) addresses[i] = artistProfiles[artistIds[i]].artist;
+        return addresses;
+    }
+
+    function getArtistHandleHashes(uint256[] calldata artistIds) external view returns (bytes32[] memory hashes) {
+        hashes = new bytes32[](artistIds.length);
+        for (uint256 i = 0; i < artistIds.length; i++) hashes[i] = artistProfiles[artistIds[i]].handleHash;
+        return hashes;
+    }
