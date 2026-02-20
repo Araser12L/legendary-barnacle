@@ -765,3 +765,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
             artworkIdsByGallery[galleryId].length,
             gr.commissionBps,
             gr.totalEarningsWei
+        );
+    }
+
+    function getArtistSummary(uint256 artistId) external view returns (
+        address artist,
+        uint256 mintCount,
+        uint256 totalEarnings
+    ) {
+        ArtistProfile storage ap = artistProfiles[artistId];
+        return (ap.artist, ap.totalMints, ap.totalEarningsWei);
+    }
+
+    function validateRoyaltyBps(uint256 royaltyBps) external pure returns (bool) {
+        return royaltyBps <= MAX_ROYALTY_BPS;
+    }
+
+    function validateCommissionBps(uint256 commissionBps) external pure returns (bool) {
+        return commissionBps <= MAX_COMMISSION_BPS;
+    }
+
+    function maxTraitsAllowed() external pure returns (uint256) {
+        return MAX_TRAITS_PER_ARTWORK;
+    }
+
+    function bpsDenominator() external pure returns (uint256) {
+        return BPS_DENOM;
+    }
+
+    function getTraitsBatch(uint256[] calldata artworkIds) external view returns (
+        bytes32[][] memory allKeys,
+        bytes32[][] memory allValues
+    ) {
+        uint256 n = artworkIds.length;
+        allKeys = new bytes32[][](n);
+        allValues = new bytes32[][](n);
+        for (uint256 i = 0; i < n; i++) {
+            TraitPair[] storage pairs = traitsByArtwork[artworkIds[i]];
+            allKeys[i] = new bytes32[](pairs.length);
+            allValues[i] = new bytes32[](pairs.length);
+            for (uint256 j = 0; j < pairs.length; j++) {
+                allKeys[i][j] = pairs[j].key;
+                allValues[i][j] = pairs[j].value;
+            }
+        }
+        return (allKeys, allValues);
+    }
+
+    function artworkExists(uint256 artworkId) external view returns (bool) {
+        return artworkId != 0 && artworkId <= artworkCounter;
+    }
+
+    function galleryExists(uint256 galleryId) external view returns (bool) {
+        return galleryId != 0 && galleryId <= galleryCounter && galleryRecords[galleryId].active;
+    }
+
+    function artistExists(uint256 artistId) external view returns (bool) {
+        return artistId != 0 && artistId <= artistCounter && artistProfiles[artistId].active;
+    }
+
