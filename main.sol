@@ -824,3 +824,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         return artistId != 0 && artistId <= artistCounter && artistProfiles[artistId].active;
     }
 
+    function getArtworkIdsForGalleryPaginated(uint256 galleryId, uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        uint256[] storage ids = artworkIdsByGallery[galleryId];
+        if (offset >= ids.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > ids.length) end = ids.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = ids[offset + i];
+        return out;
+    }
+
+    function getArtworkIdsForArtistPaginated(uint256 artistId, uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        uint256[] storage ids = artworkIdsByArtist[artistId];
+        if (offset >= ids.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > ids.length) end = ids.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = ids[offset + i];
+        return out;
+    }
+
+    function getOwnedArtworkIdsPaginated(address account, uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        uint256[] storage ids = ownedArtworkIds[account];
+        if (offset >= ids.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > ids.length) end = ids.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) out[i] = ids[offset + i];
+        return out;
+    }
+
+    function totalListedInGallery(uint256 galleryId) external view returns (uint256 count) {
+        uint256[] storage ids = artworkIdsByGallery[galleryId];
+        for (uint256 i = 0; i < ids.length; i++) {
+            if (artworkRecords[ids[i]].listed && artworkRecords[ids[i]].listedAtGalleryId == galleryId) count++;
+        }
+        return count;
+    }
+
+    function getListedPrices(uint256[] calldata artworkIds) external view returns (uint256[] memory prices) {
+        prices = new uint256[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) {
+            prices[i] = artworkRecords[artworkIds[i]].listPriceWei;
+        }
+        return prices;
+    }
+
+    function getCurrentOwners(uint256[] calldata artworkIds) external view returns (address[] memory owners) {
+        owners = new address[](artworkIds.length);
+        for (uint256 i = 0; i < artworkIds.length; i++) {
+            owners[i] = artworkRecords[artworkIds[i]].currentOwner;
+        }
+        return owners;
+    }
+
+    function getMetadataHashes(uint256[] calldata artworkIds) external view returns (bytes32[] memory hashes) {
+        hashes = new bytes32[](artworkIds.length);
