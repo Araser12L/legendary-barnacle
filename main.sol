@@ -647,3 +647,62 @@ contract LegendaryBarnacle is ReentrancyGuard, Ownable {
         return galleryRecords[galleryId].curator;
     }
 
+    function commissionBpsOf(uint256 galleryId) external view returns (uint256) {
+        return galleryRecords[galleryId].commissionBps;
+    }
+
+    function nameHashOf(uint256 galleryId) external view returns (bytes32) {
+        return galleryRecords[galleryId].nameHash;
+    }
+
+    function platformTreasuryAddress() external view returns (address) {
+        return platformTreasury;
+    }
+
+    function genesisCuratorAddress() external view returns (address) {
+        return genesisCurator;
+    }
+
+    function deployedBlock() external view returns (uint256) {
+        return deployedAtBlock;
+    }
+
+    function isPlatformPaused() external view returns (bool) {
+        return platformPaused;
+    }
+
+    function getArtworkIdsPaginated(uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        if (offset >= _allArtworkIds.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > _allArtworkIds.length) end = _allArtworkIds.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            out[i] = _allArtworkIds[offset + i];
+        }
+        return out;
+    }
+
+    function getGalleryIdsPaginated(uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        if (offset >= _allGalleryIds.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > _allGalleryIds.length) end = _allGalleryIds.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            out[i] = _allGalleryIds[offset + i];
+        }
+        return out;
+    }
+
+    function getArtistIdsPaginated(uint256 offset, uint256 limit) external view returns (uint256[] memory) {
+        if (offset >= _allArtistIds.length) return new uint256[](0);
+        uint256 end = offset + limit;
+        if (end > _allArtistIds.length) end = _allArtistIds.length;
+        uint256 n = end - offset;
+        uint256[] memory out = new uint256[](n);
+        for (uint256 i = 0; i < n; i++) {
+            out[i] = _allArtistIds[offset + i];
+        }
+        return out;
+    }
